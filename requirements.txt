@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+pandas
+woocommerce
+shopifyapi
+python-dotenv
+langchain
+langchain-experimental
+langchain-google-genai
