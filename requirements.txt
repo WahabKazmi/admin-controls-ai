@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+pandas
+woocommerce
+shopifyapi
+python-dotenv
+langchain
+langchain-experimental
+langchain-google-genai
+woocommerce
+requests
+aiofiles
+python-multipart
+tabulate
