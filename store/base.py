@@ -35,3 +35,16 @@ class StoreDriver(ABC):
     @abstractmethod
     def delete_order(self, order_id: int):
         pass
+
+    # ----- Reports -----
+    @abstractmethod
+    def get_best_selling_product_today(self):
+        """
+        Return dict with keys:
+        - product_id
+        - product_name
+        - quantity_sold
+        - total_sales
+        or a dict with 'message' key in case of no data/error.
+        """
+        pass

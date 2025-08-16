@@ -50,3 +50,70 @@ document.getElementById("user-input").addEventListener("keydown", function (e) {
     sendMessage();
   }
 });
+
+
+
+// const chatBox = document.getElementById('chat-box');
+// const userInput = document.getElementById('user-input');
+// const sendBtn = document.getElementById('send-btn');
+
+// // Append messages to chat
+// function appendMessage(sender, message) {
+//   const msgDiv = document.createElement('div');
+//   msgDiv.className = sender === 'user' ? 'user-message' : 'bot-message';
+//   msgDiv.innerHTML = message.replace(/\n/g, "<br>"); // allow line breaks
+//   chatBox.appendChild(msgDiv);
+//   chatBox.scrollTop = chatBox.scrollHeight;
+// }
+
+// // Function to insert quick button text into input box
+// function setQuickMessage(text) {
+//   userInput.value = text; // just insert into the placeholder
+//   userInput.focus(); // optional: focus so user can press Enter immediately
+// }
+
+// // Send manually via button click
+// sendBtn.addEventListener('click', sendMessage);
+
+// // Send via Enter key
+// userInput.addEventListener('keypress', function (e) {
+//   if (e.key === 'Enter') {
+//     sendMessage();
+//   }
+// });
+
+// // Main send function
+// function sendMessage() {
+//   const message = userInput.value.trim();
+//   if (!message) return;
+
+//   appendMessage('user', message);
+//   userInput.value = '';
+
+//   sendToBackend(message);
+// }
+
+// // Send to backend API
+// function sendToBackend(message) {
+//   fetch('http://127.0.0.1:8000/chat', {
+//     method: 'POST',
+//     headers: { 'Content-Type': 'application/json' },
+//     body: JSON.stringify({ message: message })
+//   })
+//     .then(res => res.json())
+//     .then(data => {
+//       appendMessage('bot', data.response || '🤖 No response received.');
+//     })
+//     .catch(err => {
+//       console.error(err);
+//       appendMessage('bot', '❌ Error connecting to backend.');
+//     });
+// }
+
+// // Attach event listener for quick buttons
+// document.querySelectorAll('.quick-buttons button').forEach(btn => {
+//   btn.addEventListener('click', () => {
+//     const message = btn.getAttribute('data-message');
+//     setQuickMessage(message); // only set in input, don't send yet
+//   });
+// });

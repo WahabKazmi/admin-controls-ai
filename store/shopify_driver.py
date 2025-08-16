@@ -20,7 +20,7 @@ class ShopifyDriver(StoreDriver):
             "id": p["id"],
             "name": p["title"],
             "price": p["variants"][0]["price"] if p["variants"] else None,
-            "status": "active",  # Shopify doesn't have `status` like WooCommerce
+            "status": "active",
             "stock_quantity": p["variants"][0].get("inventory_quantity", 0),
             "categories": ", ".join(p.get("tags", "").split(",")),
             "description": p.get("body_html", ""),
@@ -52,7 +52,6 @@ class ShopifyDriver(StoreDriver):
         url = f"{self.base_url}/products/{product_id}.json"
         update_data = {"product": {"id": product_id}}
 
-        # Handle price change via variants
         if "price" in fields:
             update_data["product"]["variants"] = [{"price": str(fields["price"])}]
             del fields["price"]
@@ -69,11 +68,19 @@ class ShopifyDriver(StoreDriver):
     def delete_product(self, product_id: int):
         url = f"{self.base_url}/products/{product_id}.json"
         response = requests.delete(url, headers=self.headers)
-        response.raise_for_status()
-        return {
-            "id": product_id,
-            "message": f"🗑️ Product {product_id} deleted successfully."
-        }
+
+        if response.status_code == 200:
+            return {
+                "id": product_id,
+                "message": f"🗑️ Product {product_id} deleted successfully."
+            }
+        elif response.status_code == 404:
+            return {
+                "id": product_id,
+                "message": f"⚠️ Product {product_id} not found."
+            }
+        else:
+            response.raise_for_status()
 
     # ---------- ORDERS ----------
     def fetch_orders(self, **params) -> pd.DataFrame:
@@ -90,10 +97,35 @@ class ShopifyDriver(StoreDriver):
         } for o in data])
 
     def create_order(self, *, customer: str, product_id: int, quantity: int, total: float):
+        # Step 1: Get variant ID from product
+        product_url = f"{self.base_url}/products/{product_id}.json"
+        product_resp = requests.get(product_url, headers=self.headers)
+        product_resp.raise_for_status()
+        product_data = product_resp.json().get("product", {})
+        variants = product_data.get("variants", [])
+
+        if not variants:
+            raise ValueError("❌ No variants found for this product.")
+
+        variant_id = variants[0]["id"]
+
+        # Step 2: Try to get customer ID by first name
+        customers_url = f"{self.base_url}/customers/search.json?query=first_name:{customer}"
+        cust_resp = requests.get(customers_url, headers=self.headers)
+        cust_resp.raise_for_status()
+        customers = cust_resp.json().get("customers", [])
+
+        if customers:
+            customer_id = customers[0]["id"]
+            customer_data = {"id": customer_id}
+        else:
+            customer_data = {"first_name": customer}  # guest
+
+        # Step 3: Create the order
         order_data = {
             "order": {
-                "line_items": [{"variant_id": product_id, "quantity": quantity}],
-                "customer": {"first_name": customer},
+                "line_items": [{"variant_id": variant_id, "quantity": quantity}],
+                "customer": customer_data,
                 "financial_status": "pending"
             }
         }
@@ -116,6 +148,11 @@ class ShopifyDriver(StoreDriver):
             }
         }
         response = requests.put(url, headers=self.headers, json=update_data)
+        if response.status_code == 404:
+            return {
+                "id": order_id,
+                "message": f"⚠️ Order {order_id} not found."
+            }
         response.raise_for_status()
         return {
             "id": order_id,
@@ -125,8 +162,16 @@ class ShopifyDriver(StoreDriver):
     def delete_order(self, order_id: int):
         url = f"{self.base_url}/orders/{order_id}.json"
         response = requests.delete(url, headers=self.headers)
-        response.raise_for_status()
-        return {
-            "id": order_id,
-            "message": f"🗑️ Order {order_id} deleted successfully."
-        }
+
+        if response.status_code == 200:
+            return {
+                "id": order_id,
+                "message": f"🗑️ Order {order_id} deleted successfully."
+            }
+        elif response.status_code == 404:
+            return {
+                "id": order_id,
+                "message": f"⚠️ Order {order_id} not found."
+            }
+        else:
+            response.raise_for_status()
